@@ -1,0 +1,80 @@
+plugins {
+  id "com.eriwen.gradle.js" version "2.14.1"
+}
+ 
+apply plugin: 'pmd'
+
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
+
+repositories {
+    jcenter()
+}
+
+javascript.source {
+    dev {
+        js {
+            srcDir "${projectDir}/"
+	    include "**/*.js"
+            exclude "gulpfile.js"
+	    exclude "build/**"
+	    exclude "node_modules/**"
+            exclude "tests/**"
+            exclude "test/**"
+            exclude "config/**"
+            exclude "coverage/**"
+            exclude "build/**"
+	    exclude ".eslintrc.js"
+        }
+    }
+}
+
+task jshintz(type: com.eriwen.gradle.js.tasks.JsHintTask) {
+    source = javascript.source.dev.js.files
+    dest = "${buildDir}/reports/jshint.xml"
+    ignoreExitCode = true
+    reporter = 'checkstyle'
+    jshint.options = [expr: "true", unused: "true"]
+    jshint.predef = ["exports": 1]
+}
+
+task jsdocz(type: com.eriwen.gradle.js.tasks.JsDocTask) {
+    source = javascript.source.dev.js.files
+    destinationDir = file("${buildDir}/jsdoc")
+}
+
+pmd{
+	toolVersion = '5.0.5'
+}
+
+task pmd (type: Pmd) {
+	ignoreFailures = true
+	source = javascript.source.dev.js.files
+
+
+	ruleSetFiles = files("${projectDir}/pmd-rules/basic-rules.xml","${projectDir}/pmd-rules/braces-rules.xml","${projectDir}/pmd-rules/unnecessary-rules.xml")
+
+	reports {
+		xml.enabled = true
+		xml {
+		     destination "${buildDir}/reports/pmd.xml"	
+		}
+		html.enabled = true
+		html {
+		     destination "${buildDir}/reports/pmd.html"	
+		}
+	}
+}
+
+task runMocha(type: Exec) {
+    executable 'npm'
+    args 'run','coverage_mocha'
+}
+
+task runFrisby(type: Exec) {
+    executable 'npm'
+    args 'run','coverage_frisby'
+}
